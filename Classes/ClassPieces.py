@@ -1,4 +1,5 @@
 import pygame, random
+from copy import deepcopy
 
 SonCapture = "Sounds/capture.mp3"                 #Charge le Son de Capture
 SonBouger = "Sounds/bouge.mp3"                    #Charge le Son de Déplacement
@@ -116,8 +117,8 @@ class Pieces:
         MainGame.GameInfos.UpdateScreen()       #Actualisation de la Position des Pièces
         MainGame.GameInfos.ChangeTour()         #Change le Tour
     
-    def SimulateMove(self, Plateau, Position : tuple):
-        Board = dict(Plateau)  #On copie le Plateau actuel
+    def SimulateMove(self, Plateau, Position : tuple) -> None | tuple:
+        Board = deepcopy(Plateau)  #On copie le Plateau actuel
         
         PieceCapture = None                         #La Piece capturée
         PosInf = list(Board[Position])              #Les infos de la Position
@@ -128,9 +129,9 @@ class Pieces:
             else:
                 PieceCapture = PieceOnPos           #Récupère la Pièce qui sera capturée
         
-        PosInf[1] = self                           #Place la Pièce à la position
+        PosInf[1] = self                            #Place la Pièce à la position
         Board[Position] = PosInf
-        return Board      #Retourne le nouveau Plateau et la Pièce capturée
+        return Board                                #Retourne le nouveau Plateau et la Pièce capturée
 
     def IsEnnemy(self, AutrePiece : object):
         return self.Couleur != AutrePiece.Couleur

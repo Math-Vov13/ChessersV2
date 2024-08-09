@@ -237,7 +237,7 @@ def UpdateMenuFrame(AddLvl : int):
         else:
             if Stats_Btn.clicked == True:
                 Stats_Btn.ResetClick()
-                webbrowser.open("http://localhost/Sites/Chessers/Pages/classement.php")
+                webbrowser.open("http://localhost/Sites%20Perso/Chessers/Pages/classement.php")
             elif Actus_Btn.clicked == True:
                 Actus_Btn.ResetClick()
                 webbrowser.open("https://www.europe-echecs.com/actualites.html")

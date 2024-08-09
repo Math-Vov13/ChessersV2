@@ -21,7 +21,7 @@ or
 [Launch](Launcher.bat)
 
 ```sh
-python Menu.py
+python Main.py
 ```
 
 ## Dependencies

@@ -100,8 +100,8 @@ class Game:
             self.TimerObj.StartTime()                                           #Démarre le Timer
         
         if self.PlrMode == "PvE":
-            from Classes.AI import AI_Chess as AIClass  #--->AI_Chess
-            self.GameAI = AIClass.IA("Ordi", self.Player2["Couleur"], self.Player1["Couleur"], 3, False)
+            from Classes.AI import MyChessAI as AIClass  #--->AI_Chess
+            self.GameAI = AIClass.AI.IA("Ordi", self.Player2["Couleur"], self.Player1["Couleur"], 3, False)
 
     def UpdateScreen(self):                 #Actualiser le Plateau du Jeu, pour actualiser la Position des Pièces
         """Actualise la fenêtre de Jeu"""
@@ -191,7 +191,8 @@ class Game:
                 Piece.NewPosition(Pos, Situation, CP)"""
     
     def AIPlaying(self):
-        self.GameAI.PlayMove()
+        if self.GamePaused == False and self.Tour["Couleur"] == self.GameAI.Couleur:
+            self.GameAI.PlayMove(self.Positions, ObjetPieces, CouleurPieces)
     
     def NextColor(self, Couleur : str):
         if Couleur == self.Player1["Couleur"]:
