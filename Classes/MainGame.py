@@ -192,7 +192,11 @@ class Game:
     
     def AIPlaying(self):
         if self.GamePaused == False and self.Tour["Couleur"] == self.GameAI.Couleur:
-            self.GameAI.PlayMove(self.Positions, ObjetPieces, CouleurPieces)
+            self.GameAI.PlayMove()
+            """  -> utilisé pour ma nouvelle IA
+                self.Positions,
+                ObjetPieces,
+                CouleurPieces)"""
     
     def NextColor(self, Couleur : str):
         if Couleur == self.Player1["Couleur"]:

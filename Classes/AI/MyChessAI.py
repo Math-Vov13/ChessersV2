@@ -1,1 +1,1 @@
-from Classes.AI import MiniMax as AI
+from Classes.AI import AI_Chess as AI
