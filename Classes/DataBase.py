@@ -1,63 +1,95 @@
 # Import
-import mysql.connector as mySQL
-import os
+import aiomysql # mySQL with asyncio
+from aiomysql.cursors import Error as mySQL_Errors # mySQL errors
+import asyncio # asynchronous programing
+import os # Set env variable
 os.environ["DBConnected"] = "False"
+
+
+# TRANSFORM TO API !
+
 
 # Paramètres de connexion
 config = {
-    'user': 'root',
-    'password': 'root',
-    'host': 'localhost',
-    'database': 'chessers db'
+    "user": 'root',
+    "password": os.environ.get("MYPASS", 'root'),
+    "host": '127.0.0.1', # localhost
+    "db": 'chessers db',
+
+    # useless ?
+    # "use_pure": True,
+    # "port": 3306,
 }
 
+# conn = None
+# cursor = None
+
 # Connect to DB
-try:
-    conn = mySQL.connect(**config)
-    cursor = conn.cursor()
-except Exception as e:
-    print("Error while trying to make connection with DataBase :", e)
-else:
-    print("Connected to DataBase !")
-    os.environ["DBConnected"] = "True"
+async def Connect_toDB():    
+    try:
+        conn = await aiomysql.connect(**config)
+        cursor = await conn.cursor()
+        await cursor.close()
+    except Exception as e:
+        print("Error while trying to make connection with DataBase :", e)
+    else:
+        print("Connected to DataBase !")
+        os.environ["DBConnected"] = "True"
+
 
 
 # Fonction pour récupérer une donnée dans la BDD
-def getData(Table : str, Attribut : str, Value : str):
-    # # Connexion à la base de données
-    # conn = mySQL.connect(**config)
-    # cursor = conn.cursor()
-
-    # Exécution de la requête
-    Requete = f"SELECT * FROM {Table} WHERE {Attribut} = '{Value}'"
-    print(Requete)
-    cursor.execute(Requete)
-    print([i for i in cursor])
-    # Récupération de la valeur
-    # DataList = cursor.fetchone()
-    # print(DataList)
-    # Fermeture de la connexion
-    #conn.close()
-
-    return [i for i in cursor]
-
-def SaveData(Table : str, Attribut : str, Id : int):
-    # # Connexion à la base de données
-    # conn = mySQL.connect(**config)
-    # cursor = conn.cursor()
+async def getData(Table : str, Attribut : str, Value : str):
+    if os.environ.get("DBConnected") == "False":
+        return False
     
-    Requete = f"UPDATE {Table} SET {Attribut} = {Attribut} + 1 WHERE Id = {Id}"
-    print(Requete)
-    cursor.execute(Requete)
+    try:
+        async with await aiomysql.connect(**config) as cnx:
+            async with await cnx.cursor() as cur:
 
-    # Fermeture de la connexion
-    #conn.close()
+                # Exécution de la requête
+                Request = f"SELECT * FROM {Table} WHERE {Attribut} = '{Value}'"
+                print(Request)
 
-    return True
+                await cur.execute(Request)
+                Results = cur.fetchall()
+
+                return Results
+    
+    except mySQL_Errors as mySQL_err:
+        print("Error while trying to make connection with DataBase :", mySQL_err)
+        return False
+    except Exception as e:
+        print("Exception error :", e)
+        return False
+
+async def SaveData(Table : str, Attribut : str, Id : int):
+    if os.environ.get("DBConnected") == "False":
+        return False
+    
+    try:
+        async with await aiomysql.connect(**config) as cnx:
+            async with await cnx.cursor() as cur:
+                Request = f"UPDATE {Table} SET {Attribut} = {Attribut} + 1 WHERE Id = {Id}"
+                print(Request)
+
+                await cur.execute(Request)
+                
+                return True
+    
+    except mySQL_Errors as mySQL_err:
+        print("Error while trying to make connection with DataBase :", mySQL_err)
+        return False
+    except Exception as e:
+        print("Exception error :", e)
+        return False
 
 
-def Login(UserName : str, MDP : str):
-    Data = getData("comptes", "Pseudonyme", UserName)
+async def Login(UserName : str, MDP : str):
+    if os.environ.get("DBConnected") == "False":
+        return False
+    
+    Data = await getData("comptes", "Pseudonyme", UserName)
     print(Data)
     if not Data:
         return False, "No Account found !", "" #Réussi ?, Message Erreur, Identifiant du Compte
@@ -67,31 +99,54 @@ def Login(UserName : str, MDP : str):
     else:
         return False, "MDP Incorrect !", ""
 
-def SaveGameData(ID : int, Victoire : bool):
-    Requete = SaveData("classement", "Parties", ID)
+async def SaveGameData(ID : int, Victoire : bool):
+    if os.environ.get("DBConnected") == "False":
+        return False
+
+    Requete = await SaveData("classement", "Parties", ID)
     if Requete == False:
         return False, "Erreur durant la Sauvegarde des Données"
     
     if Victoire == True:
-        Requete = SaveData("classement", "Victoires", ID)
+        Requete = await SaveData("classement", "Victoires", ID)
         
         if Requete == False:
             return False, "Erreur durant la Sauvegarde des Données"
 
     return True, "Données Sauvegardées !"
 
-#print(Login("MathV", "MathChess91"))
-#print(SaveGameData(1234567890, True))
 
 if __name__ == "__main__":
-    if os.environ.get("DBConnected") == "True":
-        Requete = f"SELECT * FROM " + "comptes"
-        Requete2 = f"SELECT * FROM " + "classement"
+    async def makeTests():
+        # Create requests
+        Request = f"SELECT * FROM comptes"
+        Request2 = f"SELECT * FROM classement"
 
-        cursor.execute(Requete)
-        print("Comptes :", [i for i in cursor])
+        try:
+            async with await aiomysql.connect(**config) as cnx:
+                async with await cnx.cursor() as cur:
+                    # Execute a non-blocking query
+                    await cur.execute(Request)
 
-        cursor.execute(Requete2)
-        print("Classements :", [i for i in cursor])
+                    # Retrieve the results of the query asynchronously
+                    results = await cur.fetchall()
+                    print("Comptes :", results)
 
-        cursor.close() # Close cursor
+                    # Execute a non-blocking query
+                    await cur.execute(Request2)
+
+                    # Retrieve the results of the query asynchronously
+                    results = await cur.fetchall()
+                    print("Classements :", results)
+
+        except mySQL_Errors as mySQL_err:
+            print("Error while trying to make connection with DataBase :", mySQL_err)
+        except Exception as e:
+            print("Exception error :", e)
+
+        else:
+            print("Test passed !")
+    
+    asyncio.run(makeTests())
+else:
+    asyncio.run(Connect_toDB())
