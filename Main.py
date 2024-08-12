@@ -1,1 +1,1 @@
-from Classes import Menu # Start Game (will be changed when the Menu becomes a class)
+print("I'm working on the game. Please Wait...")

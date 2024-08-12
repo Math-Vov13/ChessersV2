@@ -17,7 +17,6 @@ So if tomorrow you see that the repository is empty, don't worry. I just got *st
 Chessers is a project made in Python</br>
 It's my first big project which uses OOP
 
-![python-logo.png](https://www.python.org/)
 
 ## Quick Start
 To start the program, you need to :
@@ -30,10 +29,6 @@ python Main.py
 ## Dependencies
 Libraries used below:
 1. pygame
-2. random
-3. json
-4. mySQL (to connect with mySQL DB)
-5. webbrowser (open a browser window)
 
 ## License
 Mathéo Vovard
