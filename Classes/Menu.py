@@ -1,5 +1,5 @@
 """Import des Bibliothèques"""
-import pygame, json
+import pygame
 import webbrowser
 from Classes.UI import ClassBouton, ClassInputBox, ClassEchiquier
 from Classes import MainGame, ClassTimer, DataBase
@@ -33,13 +33,13 @@ CouleurJ1 = "Blanc"             #Couleur Joueur1
 CouleurJ2 = "Noir"              #Couleur Joueur2
 
 #Timer
-PlrTimer = ClassTimer.Timer()
-GameTimer = 0
-TimerStarted = False
-StartTimer = 0
-LastTime = 0                    #Pour le Timer
-LastSec = 0                     #Pour le Timer
-TimerPaused = False             #Si le Timer est actif ou non
+# PlrTimer = ClassTimer.Timer()
+# GameTimer = 0
+# TimerStarted = False
+# StartTimer = 0
+# LastTime = 0                    #Pour le Timer
+# LastSec = 0                     #Pour le Timer
+# TimerPaused = False             #Si le Timer est actif ou non
 
 
 """Création de la Fenêtre de Jeu"""
@@ -52,7 +52,9 @@ pygame.display.set_caption("Chessers") #Définit le Nom de la fenêtre
 icon = pygame.image.load('Images/Logo.png') #Défini le Logo de la fenêtre
 pygame.display.set_icon(icon) #Affiche le Logo de la fenêtre
 MainGame.ActualScreen = screen
-MainGame.GameInfos.TimerObj = PlrTimer
+MainGame.GameInfos.GameTimerObj = ClassTimer.Timer()
+MainGame.GameInfos.Player1Timer = ClassTimer.Timer()
+MainGame.GameInfos.Player2Timer = ClassTimer.Timer(True)
 ClassEchiquier.Screen = screen
 
 Background = pygame.image.load('Images/Background.png')
@@ -158,10 +160,11 @@ def VerifObjectHitBox(List, MousePos):
         
 """Fonctions pour le Timer"""
 def ResetTimer(): #Remet le Timer à 0
-    global GameTimer, TimerStarted, StartTimer
-    GameTimer = 0
+    global TimerStarted
+    if MainGame.GameInfos.GameTimerObj.state != "stopped":
+        MainGame.GameInfos.GameTimerObj.stop()
+    MainGame.GameInfos.GameTimerObj.run(pygame.time.get_ticks()) # Start
     TimerStarted = True
-    StartTimer = pygame.time.get_ticks()
 
 def ContinueTimer(): #Continue le Timer
     pass
@@ -169,11 +172,11 @@ def ContinueTimer(): #Continue le Timer
     #if GameMode == "Timer":
     #    TimerPaused = False
 
-def TimeFormat(Time : int):
+def TimeFormat(Time : int) -> str:
     if Time%60 >= 10:
-        return str(Time//60) + " :" + str(Time%60)
+        return str(int(Time//60)) + " :" + str(int(Time%60))
     else:
-        return str(Time//60) + " :0" + str(Time%60)
+        return str(int(Time//60)) + " :0" + str(int(Time%60))
 
 """Sounds"""
 def PlaySound(Sound): #Joue un Son
@@ -220,7 +223,17 @@ def UpdateMenuFrame(AddLvl : int):
     """Level du Menu"""
     if level == 1: #Menu d'Entrée
         GameInfos.InMenu = True
-        PlrTimer.ResetTimer()
+        if MainGame.GameInfos.GameTimerObj.state != "stopped":
+            MainGame.GameInfos.GameTimerObj.stop()
+            if MainGame.GameInfos.GameMode == "Timer":
+                try:
+                    MainGame.GameInfos.Player1Timer.stop()
+                except:
+                    pass
+                try:
+                    MainGame.GameInfos.Player2Timer.stop()
+                except:
+                    pass
         GameInfos.GameStarted = False
         """if GameInfos.SoundPlaying == "" or GameInfos.SoundPlaying != "Menu": #Lance la musique
             SoundGame.stop()
@@ -432,12 +445,12 @@ while Running == True: #Boucle Principal
     else:
         screen.fill((33, 27, 33))
         GameInfos.Echiquier.UpdateBoard()
-        draw_text(TimeFormat(GameTimer), Titres, BlackColor, (600, 5))		#Affiche le Temps de la Partie
+        draw_text(TimeFormat(MainGame.GameInfos.GameTimerObj.getTime()), Titres, BlackColor, (600, 5))		#Affiche le Temps de la Partie
         draw_text(PseudoJ1, Titres, BlackColor, (600, 750))	#Affiche le Nom du J1
         draw_text(PseudoJ2, Titres, BlackColor, (50, 5))		#Affiche le Nom du J2
         if GameInfos.GameMode == "Timer":
-            draw_text(TimeFormat(PlrTimer.GetPlrTime("Blanc")), Titres, BlackColor, (400, 750))
-            draw_text(TimeFormat(PlrTimer.GetPlrTime("Noir")), Titres, BlackColor, (300, 5))
+            draw_text(TimeFormat(MainGame.GameInfos.Player1Timer.getTime()), Titres, BlackColor, (400, 750))
+            draw_text(TimeFormat(MainGame.GameInfos.Player2Timer.getTime()), Titres, BlackColor, (300, 5))
 
     for Object in MainGame.ListAfficheObj:    #Boucle qui affiche à l'écran chaque éléments dans la List
         screen.blit(Object.Image, Object.HitBox)
@@ -486,6 +499,7 @@ while Running == True: #Boucle Principal
     for event in pygame.event.get():
         if event.type == pygame.QUIT: #Quand la fenêtre est fermé
             Running = False #arrête la boucle
+            break
             
         elif event.type == pygame.MOUSEBUTTONDOWN:
             MousePos = pygame.mouse.get_pos()
@@ -529,8 +543,16 @@ while Running == True: #Boucle Principal
                 if GameInfos.GamePaused == False and GameInfos.Winner == "": #Met le Jeu en Pause
                     print("Paused")
                     GameInfos.GamePaused = True
+                    MainGame.GameInfos.GameTimerObj.pause()
                     if GameInfos.GameMode == "Timer":
-                        PlrTimer.PauseTimer()
+                        try:
+                            MainGame.GameInfos.Player1Timer.pause()
+                        except:
+                            pass
+                        try:
+                            MainGame.GameInfos.Player2Timer.pause()
+                        except:
+                            pass
                     UpdateMenuFrame(1)
                 elif GameInfos.GamePaused == True and GameInfos.Winner == "": #Continue la Partie
                     print("UnPaused")
@@ -540,8 +562,16 @@ while Running == True: #Boucle Principal
                     if Son == False :
                         pygame.mixer.pause()"""
                     GameInfos.GamePaused = False
+                    GameInfos.GameTimerObj.resume(pygame.time.get_ticks())
                     if GameInfos.GameMode == "Timer":
-                        PlrTimer.ContinueTimer()
+                        try:
+                            MainGame.GameInfos.Player1Timer.resume(pygame.time.get_ticks())
+                        except:
+                            pass
+                        try:
+                            MainGame.GameInfos.Player2Timer.resume(pygame.time.get_ticks())
+                        except:
+                            pass
                     UpdateMenuFrame(-1)
     
     pygame.display.flip() #Mets à Jour l'écran
@@ -551,15 +581,11 @@ while Running == True: #Boucle Principal
     """Timer"""
     if GameInfos.GameStarted == True and GameInfos.GamePaused == False:
         Time = pygame.time.get_ticks()
-    
-        if TimerStarted == True:
-            if (Time - StartTimer) // 1000:
-                StartTimer = Time
-                GameTimer += 1
+        GameInfos.UpdateTimers(Time)
         
-        if PlrTimer.Active == True:
-            if PlrTimer.UpdateTimer(Time, GameInfos.Tour["Couleur"]):
-                GameInfos.EchecetMath(GameInfos.Tour["Couleur"]) #Perds au Temps
+        # if PlrTimer.Active == True:
+        #     if PlrTimer.UpdateTimer(Time, GameInfos.Tour["Couleur"]):
+        #         GameInfos.EchecetMath(GameInfos.Tour["Couleur"]) #Perds au Temps
 
 print("Stopped successfuly: Chessers V2")
 pygame.display.quit #Quitte la fenêtre de Jeu

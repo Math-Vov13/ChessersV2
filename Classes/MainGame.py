@@ -36,7 +36,9 @@ class Game:
         self.GameChecking = False                                           #Vérifie les Infos de la Partie
 
         """Timer"""
-        self.TimerObj = None                                                #Le Timer du Jeu
+        self.GameTimerObj = None                                            #Le Timer du Jeu
+        self.Player1Timer = None
+        self.Player2Timer = None
         self.StartTime = 0                                                  #Temps à laquelle la Partie a démarré (pour savoir combien de temps elle a durée à la fin)
         self.Timer = 30                                                     #Temps avant élimination
 
@@ -95,9 +97,18 @@ class Game:
         self.GamePaused = False                                             #Jeu plus en Pause
         self.GameEnded = False                                              #Jeu Recommencé
         self.Winner = ""                                                    #Aucun Gagnant
+
         if self.GameMode == "Timer":
-            self.TimerObj.Init(self.Player1["Couleur"], self.Player2["Couleur"])#Timer remis au départ
-            self.TimerObj.StartTime()                                           #Démarre le Timer
+            if self.GameTimerObj.state == "paused":
+                self.GameTimerObj.resume(pygame.time.get_ticks())
+            else:
+                self.GameTimerObj.run(pygame.time.get_ticks())
+            if self.Player1Timer.state == "paused":
+                self.Player1Timer.resume(pygame.time.get_ticks())
+            else:
+                self.Player1Timer.run(pygame.time.get_ticks())
+            # self.GameTimerObj.Init(self.Player1["Couleur"], self.Player2["Couleur"])#Timer remis au départ
+            # self.GameTimerObj.StartTime()                                           #Démarre le Timer
         
         if self.PlrMode == "PvE":
             from Classes.AI import MyChessAI as AIClass  #--->AI_Chess
@@ -108,6 +119,13 @@ class Game:
         self.Echiquier.UpdateBoard()
         self.CreationCase(ActualScreen)
         self.CreationPieces(ActualScreen)
+    
+    def UpdateTimers(self, tick: int):
+        print("t:", tick)
+        self.GameTimerObj.updateTimer(tick)
+        if self.GameMode == "Timer":
+            self.Player1Timer.updateTimer(tick)
+            self.Player2Timer.updateTimer(tick)
 
     def CreationBoard(self):            #Création du Plateau de Jeu, (Pos --> Si on a besoin de la Position des Pièces ou non)
         """Test = [] #Réglage des positions des cases
@@ -165,8 +183,18 @@ class Game:
             if self.Tour["Couleur"] == self.Player1["Couleur"]:
                 self.Tour["Couleur"] = self.Player2["Couleur"]
                 self.CreateMoves() #J'aimerai l'éviter :/
+
+                if self.GameMode == "Timer":
+                    self.Player1Timer.pause()
+                    if self.Player2Timer.state == "pause":
+                        self.Player2Timer.resume()
+                    else:
+                        self.Player2Timer.run(pygame.time.get_ticks())
             else:
                 self.NewTour()
+                if self.GameMode == "Timer":
+                    self.Player1Timer.resume()
+                    self.Player2Timer.pause()
             self.DeletePEP(self.Tour["Couleur"])
             #Menu.ResetTimer()
             """if self.Player1["Couleur"] == self.Tour["Couleur"]:

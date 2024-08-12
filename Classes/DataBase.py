@@ -147,6 +147,6 @@ if __name__ == "__main__":
         else:
             print("Test passed !")
     
-    asyncio.run(makeTests())
+    asyncio.create_task(makeTests())
 else:
     asyncio.run(Connect_toDB())
