@@ -1,0 +1,1 @@
+# Gestion des sauvegardes (enregistrement et chargement des parties)

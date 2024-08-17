@@ -1,0 +1,1 @@
+# Fonctions utilitaires génériques (ex : gestion des entrées/sorties)

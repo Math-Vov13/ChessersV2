@@ -5,6 +5,7 @@ Actually, I'm just trying to reorganize and rewrite some scripts.
 When I'll be stuck by my old code, I'll redo entirelly the Project.
 So if tomorrow you see that the repository is empty, don't worry. I just got *stuck with a bug* and decided to delet my whole project so I can redo it **better** ! :)
 
+***This project is OpenSource.***
 
 <u>My goals for the V2 :</u></br>
 > -> Use API
@@ -29,6 +30,12 @@ python Main.py
 ## Dependencies
 Libraries used below:
 1. pygame
+
+## To do (for me)
+env
+```sh
+Pip freeze > requirements.txt
+```
 
 ## License
 Mathéo Vovard

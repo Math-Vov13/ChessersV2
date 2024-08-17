@@ -1,0 +1,1 @@
+# Définition des pièces (roi, reine, tour, fou, cavalier, pion)
